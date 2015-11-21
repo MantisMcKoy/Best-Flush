@@ -1,4 +1,4 @@
-package meltysnowowl.com.bestflush;
+package com.meltysnowowl.bestflush;
 
 import android.app.Application;
 
