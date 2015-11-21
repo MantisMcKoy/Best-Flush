@@ -31,8 +31,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
 
@@ -58,6 +61,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -77,10 +82,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        Parse.enableLocalDatastore(this);
-        Parse.initialize(this, "XRCZXmrATdPe0mK0uSUNayVJdSCeQb4sFewI18GV",
-                "qOhEuzTC8O7xPwY7AUDNEuDdMaq2BxYOQP7BKhKC" );
 
 
 
@@ -332,12 +333,35 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             // TODO: attempt authentication against a network service.
 
+            ParseUser.logInInBackground(mEmail, mPassword, new LogInCallback() {
+                @Override
+                public void done(ParseUser user, ParseException e) {
+                    if(user != null){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                        builder.setMessage(e.getMessage())
+                                .setTitle("Invalid Password")
+                                .setPositiveButton(android.R.string.ok, null);
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+
+                    }else{
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    }
+                }
+            });
+
+            /*
+            *Perhaps I no longer need this
             try {
                 // Simulate network access.
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 return false;
             }
+
 
             for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
@@ -346,17 +370,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     return pieces[1].equals(mPassword);
                 }
             }
-
-            // TODO: register the new account here.
-
-
+            */
 
             ParseUser newUser = new ParseUser();
 
             newUser.setEmail(mEmail);
             newUser.setUsername(mUsername);
             newUser.setPassword(mPassword);
-
 
             newUser.signUpInBackground(new SignUpCallback() {
                 @Override
@@ -401,5 +421,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
         }
     }
+
 }
 
