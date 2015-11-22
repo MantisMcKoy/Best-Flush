@@ -1,23 +1,30 @@
-package com.meltysnowowl.bestflush;
+package com.meltysnowowl.bestflush.MapLogic;
 
 import android.content.Context;
+import android.content.IntentSender;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.meltysnowowl.bestflush.R;
 
 
 /**
@@ -28,10 +35,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
  * Use the {@link MapFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MapFragment extends Fragment {
+public class MapFragment extends Fragment implements LocationProvider.LocationCallback{
+
     MapView mMapView;
-    private GoogleMap googleMap;
-    MapFragment mMapFragment;
+    private GoogleMap mMap;
+    private GoogleApiClient mGoogleApiClient;
+    public static final String TAG = MapFragment.class.getSimpleName();
+    private LocationRequest mLocationRequest;
+    private LocationProvider mLocationProvider;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -73,6 +84,8 @@ public class MapFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        mLocationProvider = new LocationProvider(getContext(), this);
     }
 
     @Override
@@ -91,8 +104,9 @@ public class MapFragment extends Fragment {
             e.printStackTrace();
         }
 
-        googleMap = mMapView.getMap();
+        mMap = mMapView.getMap();
         //Latitude and longitude ????
+
         double latitude = 17.385044;
         double longitude = 78.486671;
 
@@ -103,10 +117,10 @@ public class MapFragment extends Fragment {
         marker.icon(BitmapDescriptorFactory
                 .defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
 
-        googleMap.addMarker(marker);
+        mMap.addMarker(marker);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(17.385044, 78.486671)).zoom(12).build();
-        googleMap.animateCamera(CameraUpdateFactory
+        mMap.animateCamera(CameraUpdateFactory
                 .newCameraPosition(cameraPosition));
 
 
@@ -149,12 +163,18 @@ public class MapFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mMapView.onResume();
+        mLocationProvider.connect();
     }
+
+
     @Override
     public void onPause() {
         super.onPause();
         mMapView.onPause();
+        mLocationProvider.disconnect();
+
     }
+
 
     @Override
     public void onDestroy() {
@@ -174,6 +194,21 @@ public class MapFragment extends Fragment {
     }
 
 
+    public void handleNewLocation(Location location){
+        Log.d(TAG, location.toString());
+        double currentLatitude = location.getLatitude();
+        double currentLongtitute = location.getLongitude();
+        LatLng latLng = new LatLng(currentLatitude, currentLongtitute);
+
+        MarkerOptions options = new MarkerOptions()
+                .position(latLng)
+                .title("I am here!");
+        mMap.addMarker(options);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+    }
+    
+
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -188,4 +223,10 @@ public class MapFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+    private void setUpMap(){
+        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+
 }
